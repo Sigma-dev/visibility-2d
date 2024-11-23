@@ -1,0 +1,8 @@
+Spawn des meshs.
+Chaque frame choper les points des meshs
+chopper l'angle de chaque point par rapport à notre source
+envoyer un rayon vers chaque point
+connecter tous les points avec des triangles
+tada
+
+Problème: Si on ne laisse pas le rayon traverser
