@@ -6,7 +6,39 @@ use itertools::Itertools;
 use super::{IgnoreRaycasts2d, IntersectionData2d};
 
 #[derive(Debug)]
-struct Line(Vec2, Vec2);
+pub struct Line(pub Vec2, pub Vec2);
+
+impl Line {
+    pub fn transformed(&self, t: &Transform) -> Line {
+        Line(t.transform_point(self.0.extend(0.)).truncate(), t.transform_point(self.1.extend(0.)).truncate())
+    }
+}
+
+pub trait ToLines {
+    fn to_lines(&self) -> Vec<Line>;
+
+    fn to_transformed_lines(&self, transform: &Transform) -> Vec<Line>;
+}
+
+impl ToLines for Mesh {
+    fn to_lines(&self) -> Vec<Line> {
+        let Some(VertexAttributeValues::Float32x3(position_data)) = self.attribute(Mesh::ATTRIBUTE_POSITION) else { panic!("Couldn't get vertices") };
+        let positions: Vec<Vec2> = position_data.iter().map(|d| Vec2::new(d[0], d[1])).collect();
+        let Some(indices) = self.indices() else { panic!("Couldn't get vertices") };
+        let mut lines = Vec::new();
+        for (p1, p2, p3) in indices.iter().tuples().map(|(i1, i2, i3)| (positions[i1], positions[i2], positions[i3])) {
+            lines.push(Line(p1, p2));
+            lines.push(Line(p2, p3));
+            lines.push(Line(p3, p1));
+        };
+        lines
+    }
+    
+    fn to_transformed_lines(&self, transform: &Transform) -> Vec<Line> {
+        let lines = self.to_lines();
+        lines.iter().map(|l| l.transformed(transform)).collect()
+    }
+}
 
 impl Line {
     pub fn get_middle(&self) -> Vec2 {
@@ -40,29 +72,22 @@ pub struct RaycastMesh2d {
 
 impl RaycastMesh2d {
     pub fn from_mesh(mesh: &Mesh) -> RaycastMesh2d {
-        let Some(VertexAttributeValues::Float32x3(position_data)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION) else { panic!("Couldn't get vertices") };
-        let positions: Vec<Vec2> = position_data.iter().map(|d| Vec2::new(d[0], d[1])).collect();
-        let Some(indices) = mesh.indices() else { panic!("Couldn't get vertices") };
-        let mut lines = Vec::new();
-        for (p1, p2, p3) in indices.iter().tuples().map(|(i1, i2, i3)| (positions[i1], positions[i2], positions[i3])) {
-            lines.push(Line(p1, p2));
-            lines.push(Line(p2, p3));
-            lines.push(Line(p3, p1));
-        };
-        RaycastMesh2d { lines }
+        RaycastMesh2d { lines: mesh.to_lines() }
     }
 
     pub fn get_intersections(
         &self,
-        ray: Ray2d
+        ray: Ray2d,
+        transform: &Transform
     ) -> Vec<IntersectionData2d> {
         let mut intersections = Vec::new();
-        for line in &self.lines {
+        for local_line in &self.lines {
+            let line = local_line.transformed(transform);
             let origin = line.get_middle();
             let normal = line.get_closest_normal(ray);
             if let Some(distance) = ray.intersect_plane(origin, Plane2d::new(normal)) {
                 let position = ray.origin + *ray.direction * distance;
-                if origin.distance(position) >= line.length() / 2. { continue; };
+                if origin.distance(position) > (line.length() / 2.) + 0.01 { continue; };
                 //println!("{} {}", line.length());
                 intersections.push(IntersectionData2d { position, normal, distance });
             }

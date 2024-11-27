@@ -6,3 +6,6 @@ connecter tous les points avec des triangles
 tada
 
 Problème: Si on ne laisse pas le rayon traverser
+
+Solution for a flawless technique:
+lire le putain de tuto voir le code
