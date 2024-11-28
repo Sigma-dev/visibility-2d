@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::*};
+use bevy::{prelude::*, render::mesh::{Capsule2dMeshBuilder, CircleMeshBuilder}, sprite::*};
 use bevy_mesh_raycast_2d::IgnoreRaycasts2d;
 use bevy_view_cone::*;
 use movable_2d::Movable2d;
@@ -67,7 +67,7 @@ fn setup(
 
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(meshes.add(Capsule2d::new(15., 25.))),
+            mesh: Mesh2dHandle(meshes.add(Capsule2dMeshBuilder::new(15., 25., 5).build())),
             transform: Transform::from_xyz(50., -100., 0.),
             material: materials.add(Color::WHITE),
             ..default()
@@ -78,11 +78,11 @@ fn setup(
 
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(meshes.add(Circle { radius: 20. })),
+            mesh: Mesh2dHandle(meshes.add(CircleMeshBuilder::new(20., 12))),
             material: materials.add(Color::WHITE),
             transform: Transform::from_xyz(
-                50.0,
-                -10.0,
+                -50.0,
+                -100.0,
                 0.0,
             ),
             ..default()

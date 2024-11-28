@@ -12,6 +12,19 @@ impl Line {
     pub fn transformed(&self, t: &Transform) -> Line {
         Line(t.transform_point(self.0.extend(0.)).truncate(), t.transform_point(self.1.extend(0.)).truncate())
     }
+
+    pub fn intersection(&self, ray: Ray2d) -> Option<IntersectionData2d> {
+        let origin = self.get_middle();
+        let normal = self.get_closest_normal(ray);
+        let Some(distance) = ray.intersect_plane(origin, Plane2d::new(normal)) else { return None };
+        let position = ray.origin + *ray.direction * distance;
+        let dist = origin.distance(position);
+        if dist > (self.length() / 2.) + 5. { 
+            return None;
+        }; //TODO: Without the margin, some rays go through for some reason
+        //println!("{} {}", line.length());
+        Some(IntersectionData2d { position, normal, distance })
+    }
 }
 
 pub trait ToLines {
@@ -83,13 +96,8 @@ impl RaycastMesh2d {
         let mut intersections = Vec::new();
         for local_line in &self.lines {
             let line = local_line.transformed(transform);
-            let origin = line.get_middle();
-            let normal = line.get_closest_normal(ray);
-            if let Some(distance) = ray.intersect_plane(origin, Plane2d::new(normal)) {
-                let position = ray.origin + *ray.direction * distance;
-                if origin.distance(position) > (line.length() / 2.) + 0.01 { continue; };
-                //println!("{} {}", line.length());
-                intersections.push(IntersectionData2d { position, normal, distance });
+            if let Some(intersection) = line.intersection(ray) {
+                intersections.push(intersection);
             }
         }
         intersections

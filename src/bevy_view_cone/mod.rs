@@ -54,7 +54,7 @@ fn add_view(
 fn draw_view(
     meshes_q: Query<(&Transform, &Mesh2dHandle), With<ViewObstacle>>,
     sources_q: Query<(&Transform, &ViewSource)>,
-    mut views_q: Query<(&ViewMesh, &mut Mesh2dHandle), (Without<ViewObstacle>)>,
+    mut views_q: Query<(&ViewMesh, &mut Mesh2dHandle), Without<ViewObstacle>>,
     mut mesh_assets: ResMut<Assets<Mesh>>,
     mut raycast_2d: Raycast2d,
     mut gizmos: Gizmos,
@@ -66,7 +66,7 @@ fn draw_view(
         //let Some(VertexAttributeValues::Float32x3(position_data)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION) else {return};
         for Line(a, b) in lines {
             let a_to_b_dir = (b - a).normalize();
-            let offset = 0.1;
+            let offset = 15.; //TODO: Can probably be lower once raycast margin is fixed
             let a_to_b_offset = a_to_b_dir * offset;
             positions.push(a);
             positions.push(a - a_to_b_offset);
@@ -77,18 +77,15 @@ fn draw_view(
     for (view_mesh_source, mut view_mesh_handle) in views_q.iter_mut() {
         let (source_transform, source) = sources_q.get(view_mesh_source.get()).unwrap();
         let source_position = source_transform.translation.truncate();
-        let ray_targets: Vec<Vec2> = positions.iter().flat_map(|p| {
-            let dir = *p - source_position;
-            let perpendicular = Vec2::new(-dir.y, dir.x).normalize() * 1.;
-            vec![*p - perpendicular, *p, *p + perpendicular].into_iter()
-        }).collect();
         let mut ray_positions: Vec<Vec2> = positions.iter().map(|p| {
             let direction = Dir2::new(*p - source_position).unwrap();
             raycast_2d.cast_ray(Ray2d { origin: source_position, direction }).first().map_or(direction.as_vec2() * source.view_distance,|h| h.1.position)
         }).collect();
 
         ray_positions.sort_by(|p1, p2| angle_from_front_2d(source_transform, p1).partial_cmp(&angle_from_front_2d(source_transform, p2)).unwrap());
-        for pos in &ray_positions {
+        let red = Color::srgb(1., 0., 0.);
+        for pos in &positions {
+            //gizmos.circle_2d(*pos, 3., red);
            // println!("{}", angle_from_front_2d(source_transform, pos));
         }
 
@@ -96,9 +93,8 @@ fn draw_view(
         //gizmos.line_2d(source_position, source_transform.local_x().truncate() * 100. , Color::WHITE);
         for (p1, p2) in ray_positions.iter().tuple_windows() {
             let color = Color::hsl(hue, 1., 0.5);
-            let red = Color::srgb(1., 0., 0.);
-            gizmos.circle_2d(*p1, 3., red);
-          //  gizmos.line_2d(source_position, *p1, red);
+            //gizmos.circle_2d(*p1, 3., red);
+            //gizmos.line_2d(source_position, *p1, color);
             //gizmos.line_2d(*p1, *p2, color);
             //gizmos.line_2d(*p2, source_position, red);
             hue += 10.;
@@ -128,11 +124,5 @@ fn draw_view(
 }
 
 fn angle_from_front_2d(transform: &Transform, vec: &Vec2) -> f32 {
-    return -(vec.xy() - transform.translation.xy()).to_angle();
-    let forward = (transform.translation + *transform.local_x()).truncate();
-    let mut angle = forward.angle_between(vec.normalize());
-    if angle < 0. {
-        angle = 2. * PI - angle.abs()
-    }
-    angle
+    -(vec.xy() - transform.translation.xy()).to_angle()
 }
