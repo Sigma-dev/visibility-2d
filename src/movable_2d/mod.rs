@@ -22,17 +22,23 @@ fn handle_movables(
     mut movables_q: Query<(&mut Transform, &Movable2d)>,
 ) {
     for (mut transform, movable) in movables_q.iter_mut() {
+        let mut move_dir = Vec2::ZERO;
         if inputs.pressed(KeyCode::KeyD) {
-            transform.translation.x += movable.speed * time.delta_seconds()
+            move_dir.x += 1. 
         }
         if inputs.pressed(KeyCode::KeyA) {
-            transform.translation.x -= movable.speed * time.delta_seconds()
+            move_dir.x -= 1.
         }
         if inputs.pressed(KeyCode::KeyW) {
-            transform.translation.y += movable.speed * time.delta_seconds()
+            move_dir.y += 1.
         }
         if inputs.pressed(KeyCode::KeyS) {
-            transform.translation.y -= movable.speed * time.delta_seconds()
+            move_dir.y -= 1.
         }
+        if move_dir == Vec2::ZERO {
+            continue;
+        }
+        move_dir = move_dir.normalize();
+        transform.translation += move_dir.extend(0.) * movable.speed * time.delta_seconds();
     }
 }

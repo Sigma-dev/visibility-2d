@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::mesh::{Capsule2dMeshBuilder, CircleMeshBuilder}, sprite::*};
+use bevy::{diagnostic::*, prelude::*, render::mesh::*, sprite::*};
 use bevy_mesh_raycast_2d::IgnoreRaycasts2d;
 use bevy_view_cone::*;
 use movable_2d::Movable2d;
@@ -12,6 +12,7 @@ mod bevy_view_cone;
 fn main() {
     App::new()
     .add_plugins((DefaultPlugins, bevy_mesh_raycast_2d::plugin, bevy_view_cone::plugin, movable_2d::plugin, rotator_2d::plugin))
+    .add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()))
     .add_systems(Startup, setup)
     .run();
 }
@@ -23,6 +24,11 @@ fn setup(
 ) {
     commands.spawn(
         Camera2dBundle {
+            projection: OrthographicProjection {
+                near: -10.,
+                scale: 0.5,
+                ..default()
+            },
             ..default()
         }
     );
@@ -30,13 +36,12 @@ fn setup(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: Mesh2dHandle(meshes.add(Circle { radius: 10. })),
-            transform: Transform::from_xyz(0., 0., 0.),
             material: materials.add(Color::WHITE),
             ..default()
         },
         IgnoreRaycasts2d,
         ViewSource::new(2000.),
-        Movable2d::new(100.)
+        Movable2d::new(150.)
     ));
 
     commands.spawn((
@@ -68,7 +73,7 @@ fn setup(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: Mesh2dHandle(meshes.add(Capsule2dMeshBuilder::new(15., 25., 5).build())),
-            transform: Transform::from_xyz(50., -100., 0.),
+            transform: Transform::from_xyz(150., -120., 0.),
             material: materials.add(Color::WHITE),
             ..default()
         },
@@ -82,7 +87,7 @@ fn setup(
             material: materials.add(Color::WHITE),
             transform: Transform::from_xyz(
                 -50.0,
-                -100.0,
+                -150.0,
                 0.0,
             ),
             ..default()

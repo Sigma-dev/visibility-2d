@@ -39,7 +39,7 @@ fn add_view(
     sources_q: Query<Entity, Added<ViewSource>>,
 ) {
     for source_entity in sources_q.iter() {
-        let child = commands.spawn((
+        commands.spawn((
             MaterialMesh2dBundle {
                 material: materials.add(Color::srgb(0.3, 0.3, 0.3)),
                 transform: Transform::from_xyz(0., 0., -1.),
@@ -47,7 +47,7 @@ fn add_view(
             },
             ViewMesh(source_entity),
             IgnoreRaycasts2d
-        )).id();
+        ));
     }
 }
 
@@ -67,7 +67,7 @@ fn draw_view(
         for Line(a, b) in lines {
             let a_to_b_dir = (b - a).normalize();
             let a_to_outwards_offset = -a_to_b_dir * 1.;
-            let a_to_inwards_offset = a_to_b_dir * 1.;
+            let a_to_inwards_offset = a_to_b_dir * 0.75;
             positions.push(a + a_to_outwards_offset);
             positions.push(a + a_to_inwards_offset);
             positions.push(b - a_to_outwards_offset);
