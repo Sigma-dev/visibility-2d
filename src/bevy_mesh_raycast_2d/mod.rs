@@ -46,7 +46,7 @@ impl<'w, 's> Raycast2d<'w, 's> {
         for (entity, mesh, gt) in self.mesh_query.iter() {
             //let mut local_ray = ray.clone();
             //local_ray.origin -= gt.translation().truncate();
-            hits.extend(mesh.get_intersections(ray, &gt.compute_transform()).iter().map(|i| (entity, i.with_position(i.position + gt.translation().truncate()))));
+            hits.extend(mesh.get_intersections(ray, &gt.compute_transform()).iter().map(|i| (entity, i.with_position(i.position))));
         }
         hits.sort_by(|h1, h2| h1.1.distance.partial_cmp(&h2.1.distance).unwrap());
         hits
