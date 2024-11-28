@@ -9,9 +9,75 @@ use super::{IgnoreRaycasts2d, IntersectionData2d};
 pub struct Line(pub Vec2, pub Vec2);
 
 impl Line {
+    pub fn get_middle(&self) -> Vec2 {
+        (self.0 + self.1) / 2.
+    }
+
+    pub fn get_normals(&self) -> (Vec2, Vec2) {
+        let dx = self.1.x - self.0.x;
+        let dy = self.1.y - self.0.y;
+        (Vec2::new(-dy, dx), Vec2::new(dy, -dx))
+    }
+    
+    pub fn get_closest_normal(&self, ray: Ray2d) -> Vec2 {
+        let normals = self.get_normals();
+        if normals.0.angle_between(*ray.direction).abs() > PI / 2. {
+            normals.0
+        } else {
+            normals.1
+        }
+    }
+
+    pub fn length(&self) -> f32 {
+        return self.0.distance(self.1)
+    }
+
     pub fn transformed(&self, t: &Transform) -> Line {
         Line(t.transform_point(self.0.extend(0.)).truncate(), t.transform_point(self.1.extend(0.)).truncate())
     }
+
+    /*
+    pub fn intersection(&self, ray: Ray2d) -> Option<IntersectionData2d> {
+        let epsilon = 1e-6; // Small tolerance for floating-point imprecision
+
+        let a = self.0; // Segment start
+        let b = self.1; // Segment end
+        let dir_seg = b - a; // Direction of the segment
+        let dir_ray = *ray.direction; // Direction of the ray (assumed normalized)
+
+        let denominator = dir_seg.perp_dot(dir_ray); // Perpendicular dot product
+        if denominator.abs() < f32::EPSILON {
+            // Parallel lines (no intersection)
+            return None;
+        }
+
+        let t = (ray.origin - a).perp_dot(dir_ray) / denominator;
+        let u = (ray.origin - a).perp_dot(dir_seg) / denominator;
+
+        if t >= -epsilon && t <= 1.0 + epsilon && u >= -epsilon {
+            // Adjust bounds with epsilon to handle edge cases
+            let position = a + t * dir_seg; // Point of intersection
+
+            // Additional check for endpoint alignment
+            if t < 0.0 {
+                if (position - a).length_squared() > epsilon * epsilon {
+                    return None; // Too far from segment start
+                }
+            } else if t > 1.0 {
+                if (position - b).length_squared() > epsilon * epsilon {
+                    return None; // Too far from segment end
+                }
+            }
+
+            Some(IntersectionData2d {
+                position,
+                normal: dir_seg.perp().normalize(), // Perpendicular to the segment
+                distance: ray.origin.distance(position),
+            })
+        } else {
+            None
+        }
+    } */
 
     pub fn intersection(&self, ray: Ray2d) -> Option<IntersectionData2d> {
         let origin = self.get_middle();
@@ -19,7 +85,7 @@ impl Line {
         let Some(distance) = ray.intersect_plane(origin, Plane2d::new(normal)) else { return None };
         let position = ray.origin + *ray.direction * distance;
         let dist = origin.distance(position);
-        if dist > (self.length() / 2.) + 5. { 
+        if dist > (self.length() / 2.) + 1. { 
             return None;
         }; //TODO: Without the margin, some rays go through for some reason
         //println!("{} {}", line.length());
@@ -50,31 +116,6 @@ impl ToLines for Mesh {
     fn to_transformed_lines(&self, transform: &Transform) -> Vec<Line> {
         let lines = self.to_lines();
         lines.iter().map(|l| l.transformed(transform)).collect()
-    }
-}
-
-impl Line {
-    pub fn get_middle(&self) -> Vec2 {
-        (self.0 + self.1) / 2.
-    }
-
-    pub fn get_normals(&self) -> (Vec2, Vec2) {
-        let dx = self.1.x - self.0.x;
-        let dy = self.1.y - self.0.y;
-        (Vec2::new(-dy, dx), Vec2::new(dy, -dx))
-    }
-    
-    pub fn get_closest_normal(&self, ray: Ray2d) -> Vec2 {
-        let normals = self.get_normals();
-        if normals.0.angle_between(*ray.direction).abs() > PI / 2. {
-            normals.0
-        } else {
-            normals.1
-        }
-    }
-
-    pub fn length(&self) -> f32 {
-        return self.0.distance(self.1)
     }
 }
 
