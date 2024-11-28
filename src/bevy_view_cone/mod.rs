@@ -66,13 +66,12 @@ fn draw_view(
         //let Some(VertexAttributeValues::Float32x3(position_data)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION) else {return};
         for Line(a, b) in lines {
             let a_to_b_dir = (b - a).normalize();
-            let offset = 1.; //TODO: Can probably be lower once raycast margin is fixed
-            let a_to_b_offset = a_to_b_dir * offset;
-            let a_to_inwards_offset = a_to_b_dir * 0.1;
+            let a_to_outwards_offset = -a_to_b_dir * 1.;
+            let a_to_inwards_offset = a_to_b_dir * 1.;
+            positions.push(a + a_to_outwards_offset);
             positions.push(a + a_to_inwards_offset);
-            positions.push(a - a_to_b_offset);
+            positions.push(b - a_to_outwards_offset);
             positions.push(b - a_to_inwards_offset);
-            positions.push(b + a_to_b_offset);
         }
     }
     for (view_mesh_source, mut view_mesh_handle) in views_q.iter_mut() {

@@ -18,10 +18,9 @@ pub fn plugin(app: &mut App) {
 
 fn handle_rotators(
     time: Res<Time>,
-    inputs: Res<ButtonInput<KeyCode>>,
     mut rotators_q: Query<(&mut Transform, &Rotator2d)>,
 ) {
     for (mut transform, rotator) in rotators_q.iter_mut() {
-        transform.rotate_z(rotator.speed.to_radians() * time.delta_seconds() * 0.);
+        transform.rotate_z(rotator.speed.to_radians() * time.delta_seconds() * 1.); //rotation doesn't work because the lines arn't yet transformed maybe ?
     }
 }
