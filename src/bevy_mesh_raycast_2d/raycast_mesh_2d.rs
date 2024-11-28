@@ -121,12 +121,13 @@ impl ToLines for Mesh {
 
 #[derive(Component)]
 pub struct RaycastMesh2d {
-    lines: Vec<Line>
+    lines: Vec<Line>,
+    transformed_lines: Vec<Line>,
 }
 
 impl RaycastMesh2d {
     pub fn from_mesh(mesh: &Mesh) -> RaycastMesh2d {
-        RaycastMesh2d { lines: mesh.to_lines() }
+        RaycastMesh2d { lines: mesh.to_lines(), transformed_lines: Vec::new() }
     }
 
     pub fn get_intersections(
@@ -143,6 +144,12 @@ impl RaycastMesh2d {
         }
         intersections
     }
+
+    pub fn get_transformed_lines(
+        &self,
+    ) -> &Vec<Line> {
+        &self.transformed_lines
+    }
 }
 
 pub fn build_raycastable_meshes(
@@ -154,5 +161,13 @@ pub fn build_raycastable_meshes(
         let Some(mesh) = mesh_assets.get(mesh_handle.id()) else { continue; };
         let Some (mut e) = commands.get_entity(entity) else { continue; };
         e.insert(RaycastMesh2d::from_mesh(mesh));
+    }
+}
+
+pub fn update_transformed_raycastables(
+    mut meshes_q: Query<(&Transform, &mut RaycastMesh2d)>,
+) {
+    for (transform, mut raycast_mesh) in meshes_q.iter_mut() {
+        raycast_mesh.transformed_lines = raycast_mesh.lines.iter().map(|l| l.transformed(transform)).collect();
     }
 }

@@ -712,6 +712,7 @@ dependencies = [
  "bevy_app",
  "bevy_ecs",
  "bevy_utils",
+ "tracing-error",
  "tracing-log",
  "tracing-subscriber",
  "tracing-wasm",
@@ -856,6 +857,7 @@ dependencies = [
  "naga",
  "naga_oil",
  "nonmax",
+ "profiling",
  "ruzstd",
  "send_wrapper",
  "serde",
@@ -2992,6 +2994,20 @@ name = "profiling"
 version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afbdc74edc00b6f6a218ca6a5364d6226a259d4b8ea1af4a0ea063f27e179f4d"
+dependencies = [
+ "profiling-procmacros",
+ "tracing",
+]
+
+[[package]]
+name = "profiling-procmacros"
+version = "1.0.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a65f2e60fbf1063868558d69c6beacf412dc755f9fc020f514b7955fc914fe30"
+dependencies = [
+ "quote",
+ "syn 2.0.89",
+]
 
 [[package]]
 name = "quote"
@@ -3444,6 +3460,16 @@ checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
  "valuable",
+]
+
+[[package]]
+name = "tracing-error"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d686ec1c0f384b1277f097b2f279a2ecc11afe8c133c1aabf036a27cb4cd206e"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

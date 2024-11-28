@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{color::palettes::css, math::VectorSpace, prelude::*, render::{mesh::*, render_asset::RenderAssetUsages}, sprite::*};
 use itertools::Itertools;
 
-use crate::bevy_mesh_raycast_2d::{raycast_mesh_2d::{Line, ToLines}, IgnoreRaycasts2d, Raycast2d};
+use crate::bevy_mesh_raycast_2d::{raycast_mesh_2d::{Line, RaycastMesh2d, ToLines}, IgnoreRaycasts2d, Raycast2d};
 
 #[derive(Component)]
 pub struct ViewObstacle;
@@ -52,26 +52,23 @@ fn add_view(
 }
 
 fn draw_view(
-    meshes_q: Query<(&Transform, &Mesh2dHandle), With<ViewObstacle>>,
+    meshes_q: Query<&RaycastMesh2d, With<ViewObstacle>>,
     sources_q: Query<(&Transform, &ViewSource)>,
     mut views_q: Query<(&ViewMesh, &mut Mesh2dHandle), Without<ViewObstacle>>,
     mut mesh_assets: ResMut<Assets<Mesh>>,
     mut raycast_2d: Raycast2d,
-    mut gizmos: Gizmos,
 ) {
     let mut positions = Vec::new();
-    for (mesh_transform, mesh_handle) in meshes_q.iter() {
-        let Some(mesh) = mesh_assets.get(mesh_handle.id()) else { continue; };
-        let lines = mesh.to_transformed_lines(mesh_transform);
-        //let Some(VertexAttributeValues::Float32x3(position_data)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION) else {return};
+    for (raycast_mesh) in meshes_q.iter() {
+        let lines = raycast_mesh.get_transformed_lines();
         for Line(a, b) in lines {
-            let a_to_b_dir = (b - a).normalize();
+            let a_to_b_dir = (*b - *a).normalize();
             let a_to_outwards_offset = -a_to_b_dir * 1.;
             let a_to_inwards_offset = a_to_b_dir * 0.75;
-            positions.push(a + a_to_outwards_offset);
-            positions.push(a + a_to_inwards_offset);
-            positions.push(b - a_to_outwards_offset);
-            positions.push(b - a_to_inwards_offset);
+            positions.push(*a + a_to_outwards_offset);
+            positions.push(*a + a_to_inwards_offset);
+            positions.push(*b - a_to_outwards_offset);
+            positions.push(*b - a_to_inwards_offset);
         }
     }
     for (view_mesh_source, mut view_mesh_handle) in views_q.iter_mut() {
@@ -83,27 +80,9 @@ fn draw_view(
         }).collect();
 
         ray_positions.sort_by(|p1, p2| angle_from_front_2d(source_transform, p1).partial_cmp(&angle_from_front_2d(source_transform, p2)).unwrap());
-        let red = Color::srgb(1., 0., 0.);
-        for pos in &positions {
-            //gizmos.circle_2d(*pos, 3., red);
-           // println!("{}", angle_from_front_2d(source_transform, pos));
-        }
-
-        let mut hue = 0.0;
-        //gizmos.line_2d(source_position, source_transform.local_x().truncate() * 100. , Color::WHITE);
-        for (p1, p2) in ray_positions.iter().tuple_windows() {
-            let color = Color::hsl(hue, 1., 0.5);
-            //gizmos.circle_2d(*p1, 3., red);
-            //gizmos.line_2d(source_position, *p1, color);
-            //gizmos.line_2d(*p1, *p2, color);
-            //gizmos.line_2d(*p2, source_position, red);
-            hue += 10.;
-        }
 
         let mut new = false;
         let mesh: &mut Mesh = if view_mesh_handle.is_strong() { mesh_assets.get_mut(view_mesh_handle.id()).unwrap() } else { new = true; &mut Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default()) };
-        mesh.remove_attribute(Mesh::ATTRIBUTE_POSITION);
-        mesh.remove_indices();
     
         let mut indices = Vec::new();
         for index in 1..ray_positions.len() {

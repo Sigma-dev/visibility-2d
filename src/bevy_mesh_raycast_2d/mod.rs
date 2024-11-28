@@ -1,10 +1,12 @@
 use bevy::{ecs::system::{lifetimeless::Read, SystemParam}, prelude::*};
-use raycast_mesh_2d::{build_raycastable_meshes, RaycastMesh2d};
+use raycast_mesh_2d::*;
 
 pub mod raycast_mesh_2d;
 
 pub fn plugin(app: &mut App) {
-    app.add_systems(Update, build_raycastable_meshes);
+    app
+    .add_systems(PreUpdate, update_transformed_raycastables)
+    .add_systems(Update, build_raycastable_meshes);
 }
 
 #[derive(Component)]

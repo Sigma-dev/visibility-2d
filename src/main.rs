@@ -1,4 +1,4 @@
-use bevy::{diagnostic::*, prelude::*, render::mesh::*, sprite::*};
+use bevy::{diagnostic::*, prelude::*, render::mesh::*, sprite::*, window::*};
 use bevy_mesh_raycast_2d::IgnoreRaycasts2d;
 use bevy_view_cone::*;
 use movable_2d::Movable2d;
@@ -11,7 +11,17 @@ mod bevy_view_cone;
 
 fn main() {
     App::new()
-    .add_plugins((DefaultPlugins, bevy_mesh_raycast_2d::plugin, bevy_view_cone::plugin, movable_2d::plugin, rotator_2d::plugin))
+    .add_plugins(
+        DefaultPlugins.set(
+        WindowPlugin {
+        primary_window: Some(Window {
+            present_mode: PresentMode::AutoVsync,
+            ..default()
+        }),
+        ..default()
+        },
+    ))
+    .add_plugins((bevy_mesh_raycast_2d::plugin, bevy_view_cone::plugin, movable_2d::plugin, rotator_2d::plugin))
     .add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()))
     .add_systems(Startup, setup)
     .run();
