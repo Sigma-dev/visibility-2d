@@ -22,6 +22,6 @@ fn handle_rotators(
     mut rotators_q: Query<(&mut Transform, &Rotator2d)>,
 ) {
     for (mut transform, rotator) in rotators_q.iter_mut() {
-        transform.rotate_z(rotator.speed.to_radians() * time.delta_seconds() * 1.);
+        transform.rotate_z(rotator.speed.to_radians() * time.delta_seconds() * 0.);
     }
 }

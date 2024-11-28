@@ -136,7 +136,7 @@ impl RaycastMesh2d {
     ) -> Vec<IntersectionData2d> {
         let mut intersections = Vec::new();
         for local_line in &self.lines {
-            let line = local_line.transformed(transform);
+            let line = local_line.transformed(transform); //TODO: Generate the transformed lines in PreUpdate every frame
             if let Some(intersection) = line.intersection(ray) {
                 intersections.push(intersection);
             }
