@@ -85,7 +85,7 @@ impl Line {
         let Some(distance) = ray.intersect_plane(origin, Plane2d::new(normal)) else { return None };
         let position = ray.origin + *ray.direction * distance;
         let dist = origin.distance(position);
-        if dist > (self.length() / 2.) + 1. { 
+        if dist > (self.length() / 2.) + 0.5 { 
             return None;
         }; //TODO: Without the margin, some rays go through for some reason
         //println!("{} {}", line.length());

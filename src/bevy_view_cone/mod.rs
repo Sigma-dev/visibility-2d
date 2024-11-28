@@ -66,7 +66,7 @@ fn draw_view(
         //let Some(VertexAttributeValues::Float32x3(position_data)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION) else {return};
         for Line(a, b) in lines {
             let a_to_b_dir = (b - a).normalize();
-            let offset = 5.; //TODO: Can probably be lower once raycast margin is fixed
+            let offset = 1.; //TODO: Can probably be lower once raycast margin is fixed
             let a_to_b_offset = a_to_b_dir * offset;
             let a_to_inwards_offset = a_to_b_dir * 0.1;
             positions.push(a + a_to_inwards_offset);
@@ -86,7 +86,7 @@ fn draw_view(
         ray_positions.sort_by(|p1, p2| angle_from_front_2d(source_transform, p1).partial_cmp(&angle_from_front_2d(source_transform, p2)).unwrap());
         let red = Color::srgb(1., 0., 0.);
         for pos in &positions {
-            gizmos.circle_2d(*pos, 3., red);
+            //gizmos.circle_2d(*pos, 3., red);
            // println!("{}", angle_from_front_2d(source_transform, pos));
         }
 
@@ -125,5 +125,9 @@ fn draw_view(
 }
 
 fn angle_from_front_2d(transform: &Transform, vec: &Vec2) -> f32 {
-    -(vec.xy() - transform.translation.xy()).to_angle()
+    let mut angle = (*vec - transform.translation.xy()).to_angle();
+    if angle < 0. {
+        angle = 2. * PI - angle.abs()
+    }
+    angle
 }

@@ -36,7 +36,7 @@ fn setup(
         },
         IgnoreRaycasts2d,
         ViewSource::new(2000.),
-        Movable2d::new(50.)
+        Movable2d::new(100.)
     ));
 
     commands.spawn((
