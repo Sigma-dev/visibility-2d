@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, render::mesh::VertexAttributeValues, sprite::Mesh2dHandle};
+use bevy::{prelude::*, render::mesh::VertexAttributeValues, sprite::Mesh2dHandle, utils::HashSet};
 use itertools::Itertools;
 
 use super::{IgnoreRaycasts2d, IntersectionData2d};
@@ -8,7 +8,24 @@ use super::{IgnoreRaycasts2d, IntersectionData2d};
 #[derive(Debug)]
 pub struct Line(pub Vec2, pub Vec2);
 
+impl PartialEq for Line {
+    fn eq(&self, other: &Self) -> bool {
+        // Compare lines considering that start and end points can be swapped
+        (self.0 == other.0 && self.1 == other.1) || (self.0 == other.1 && self.1 == other.0)
+    }
+}
+
+impl Eq for Line {}
+
 impl Line {
+    fn canonical(&self) -> (Vec2, Vec2) {
+        if self.0.length_squared() < self.1.length_squared() {
+            (self.0.clone(), self.1.clone())
+        } else {
+            (self.1.clone(), self.0.clone())
+        }
+    }
+
     pub fn get_middle(&self) -> Vec2 {
         (self.0 + self.1) / 2.
     }
@@ -93,6 +110,23 @@ impl Line {
     }
 }
 
+use std::hash::{Hash, Hasher};
+
+impl Hash for Line {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Ensure consistent hashing regardless of point order
+        let (p1, p2) = if self.0.x < self.1.x || (self.0.x == self.1.x && self.0.y < self.1.y) {
+            (&self.0, &self.1)
+        } else {
+            (&self.1, &self.0)
+        };
+        p1.x.to_bits().hash(state);
+        p1.y.to_bits().hash(state);
+        p2.x.to_bits().hash(state);
+        p2.y.to_bits().hash(state);
+    }
+}
+
 pub trait ToLines {
     fn to_lines(&self) -> Vec<Line>;
 
@@ -110,7 +144,7 @@ impl ToLines for Mesh {
             lines.push(Line(p2, p3));
             lines.push(Line(p3, p1));
         };
-        lines
+        remove_duplicates(lines)
     }
     
     fn to_transformed_lines(&self, transform: &Transform) -> Vec<Line> {
@@ -150,6 +184,14 @@ impl RaycastMesh2d {
     ) -> &Vec<Line> {
         &self.transformed_lines
     }
+}
+
+fn remove_duplicates(lines: Vec<Line>) -> Vec<Line> {
+    let len = lines.len();
+    let set: HashSet<Line> = lines.into_iter().collect();
+    println!("{} {}", len, set.len());
+
+    set.into_iter().collect()
 }
 
 pub fn build_raycastable_meshes(
