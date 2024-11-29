@@ -4,6 +4,7 @@ use bevy_view_cone::*;
 use movable_2d::Movable2d;
 use rotator_2d::Rotator2d;
 
+mod seg_2d;
 mod movable_2d;
 mod rotator_2d;
 mod bevy_mesh_raycast_2d;

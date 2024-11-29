@@ -1,9 +1,8 @@
 use std::f32::consts::PI;
 
-use bevy::{color::palettes::css, math::VectorSpace, prelude::*, render::{mesh::*, render_asset::RenderAssetUsages}, sprite::*};
-use itertools::Itertools;
-
-use crate::bevy_mesh_raycast_2d::{raycast_mesh_2d::{Line, RaycastMesh2d, ToLines}, IgnoreRaycasts2d, Raycast2d};
+use bevy::{prelude::*, render::{mesh::*, render_asset::RenderAssetUsages}, sprite::*};
+use crate::bevy_mesh_raycast_2d::{raycast_mesh_2d::RaycastMesh2d, IgnoreRaycasts2d, Raycast2d};
+use crate::seg_2d::Seg2d;
 
 #[derive(Component)]
 pub struct ViewObstacle;
@@ -59,9 +58,9 @@ fn draw_view(
     mut raycast_2d: Raycast2d,
 ) {
     let mut positions = Vec::new();
-    for (raycast_mesh) in meshes_q.iter() {
+    for raycast_mesh in meshes_q.iter() {
         let lines = raycast_mesh.get_transformed_lines();
-        for Line(a, b) in lines {
+        for Seg2d(a, b) in lines {
             let a_to_b_dir = (*b - *a).normalize();
             let a_to_outwards_offset = -a_to_b_dir * 1.;
             let a_to_inwards_offset = a_to_b_dir * 0.75;
@@ -91,8 +90,6 @@ fn draw_view(
         indices.append(&mut vec![0, ray_positions.len() as u32,  1]);
         let mut vertex_positions: Vec<Vec3> = vec![source_transform.translation];
         vertex_positions.extend(ray_positions.iter().map(|p| p.extend(0.)));
-        //println!("{:?}", vertex_positions);
-        //println!("{:?}", indices);
         mesh.insert_indices(Indices::U32(indices));
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertex_positions);
         if new {
